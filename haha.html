@@ -1,0 +1,42 @@
+<!DOCTYPE html>  
+<html>  
+<head>  
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />  
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  
+<title>Hello, World</title>  
+<style type="text/css">  
+html{height:100%}  
+body{height:100%;margin:0px;padding:0px}  
+#container{height:100%}  
+</style>  
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=oTCnYsxEFVjSzRm2fQF0X9Pd"></script>
+</head>  
+ 
+<body>  
+<div id="container"></div> 
+<script type="text/javascript" src="data.js"></script>
+<script type="text/javascript"> 
+var map = new BMap.Map('container'); 
+map.centerAndZoom("杭州",14); 
+map.enableScrollWheelZoom(true);
+var myIcon1 = new BMap.Icon('1.png', new BMap.Size(135, 135), {});  
+myIcon1.imageOffset = new BMap.Size(25, 25);
+var point1 = new BMap.Point(120.208629,30.184429);   
+var marker1 = new BMap.Marker(point1, {icon: myIcon1});   
+map.addOverlay(marker1);
+
+var myIcon2 = new BMap.Icon('2.png', new BMap.Size(135, 135), {});  
+myIcon2.imageOffset = new BMap.Size(25, 25);
+var point2 = new BMap.Point(120.208341,30.19697);   
+var marker2 = new BMap.Marker(point2, {icon: myIcon2});   
+map.addOverlay(marker2);
+
+var myIcon3 = new BMap.Icon('3.png', new BMap.Size(135, 135), {});  
+myIcon3.imageOffset = new BMap.Size(25, 25);
+var point3 = new BMap.Point(120.034151,30.225628);   
+var marker3 = new BMap.Marker(point3, {icon: myIcon3});   
+map.addOverlay(marker3);
+
+</script>  
+</body>  
+</html>

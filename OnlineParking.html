@@ -1,0 +1,112 @@
+<!DOCTYPE html>  
+<html>  
+<head>  
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />  
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  
+<title>Hello, World</title>  
+<style type="text/css">  
+html{height:100%}  
+body{height:100%;margin:0px;padding:0px}  
+#container{height:100%}  
+</style>  
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=oTCnYsxEFVjSzRm2fQF0X9Pd"></script>
+</head>  
+ 
+<body>  
+<div id="container"></div> 
+<script type="text/javascript" src="data.js"></script>
+<script type="text/javascript"> 
+var map = new BMap.Map('container'); 
+map.centerAndZoom("杭州",12); 
+map.enableScrollWheelZoom();
+//map.disableDoubleClickZoom();
+var t=setTimeout("getB()",2000);
+map.addEventListener("moveend", getB);
+map.addEventListener("zoomend", getB);
+function getB(){
+	map.clearOverlays();
+	var cubes = initCube(10, 6);
+	var boundsLngMax = map.getBounds().getNorthEast().lng;
+	var boundsLngMin = map.getBounds().getSouthWest().lng;
+	var boundsLatMax = map.getBounds().getNorthEast().lat;
+	var boundsLatMin = map.getBounds().getSouthWest().lat;
+	var boundries = [boundsLngMax, boundsLngMin, boundsLatMax, boundsLatMin];
+	var myIcon = new BMap.Icon('truck.png', new BMap.Size(45, 40), {});  
+	for (var i=0; i<data.length; i++){
+		if (data[i]["经度"]>=boundsLngMin && data[i]["经度"]<=boundsLngMax && 
+			data[i]["纬度"]>=boundsLatMin && data[i]["纬度"]<=boundsLatMax){
+
+			var coord = getCoordInCube(data[i]["经度"], data[i]["纬度"], 10, 6, boundries);
+			console.log(coord);
+			var point = new BMap.Point(data[i]["经度"], data[i]["纬度"]);      
+			var marker = new BMap.Marker(point, {icon: myIcon});   
+			marker.setTitle("司机姓名："+data[i]["司机姓名"]+" 车牌："+data[i]["车牌号"]+" 记录时间："+data[i]["记录时间"]); 
+			//map.addOverlay(marker);
+			marker.addEventListener("click",function(){
+				var label = new BMap.Label(this.V.title.replace(/\s/g, "<br />"));
+				label.setContent = "text";
+				label.setStyle({backgroundColor: "#CAE1FF"});
+				label.setPosition(this.point);
+				label.setOffset(new BMap.Size(30,-40));
+				label.enableMassClear();
+				map.addOverlay(label);
+			});
+			marker.addEventListener("mouseout",function(){
+				for (var j=0; j<map.getOverlays().length; j++){
+					
+					if (map.getOverlays()[j].V.className == "BMapLabel" && map.getOverlays()[j].content.length > 10) {
+						map.removeOverlay(map.getOverlays()[j]);	
+					}
+				}
+			});
+			cubes[coord].push(marker);
+		}
+	}
+	for (var coord in cubes) {
+		if (cubes[coord].length < 10) {
+			for (var i=0; i<cubes[coord].length; i++) {
+				map.addOverlay(cubes[coord][i]);
+			}
+		}
+		else {
+			var point = cubes[coord][0].getPosition();
+			var circle = new BMap.Circle(point,5*map.getZoom()*map.getZoom(),{strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});
+			var label = new BMap.Label(cubes[coord].length.toString());
+			label.setPosition(point);
+			map.addOverlay(circle);
+			map.addOverlay(label);
+		}
+	}
+}
+
+function getCoordInCube(lng, lat, col, row, boundries){
+	var lng_unit = (boundries[0] - boundries[1]) / col;
+	var lat_unit = (boundries[2] - boundries[3]) / row;
+	console.log(lng_unit, lat_unit);
+	for (var i=0; i<row; i++) {
+		for (var j=0; j<col; j++) {
+			var minlng = boundries[1] + lng_unit * j;
+			var maxlng = minlng + lng_unit;
+			var minlat = boundries[3] + lat_unit * i;
+			var maxlat = minlat + lat_unit;
+			if (lng >= minlng && lng <= maxlng && lat >= minlat && lat <= maxlat) {
+				return i.toString() + j.toString();
+			}
+		}
+	}
+}
+
+function initCube(col, row) {
+	var cubes = {};
+	for (var i=0; i<row; i++) {
+		for (var j=0; j<col; j++) { 
+			cubes[i.toString() + j.toString()] = [];
+		}
+	}
+	return cubes;
+}
+
+
+</script>  
+</body>  
+</html>
