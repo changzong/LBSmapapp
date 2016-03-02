@@ -25,71 +25,76 @@ myCity.get(myFun);
 function myFun(result){
     var cityName = result.name;
     map.centerAndZoom(cityName, 12); 
-    console.log(cityName);
 }
 
 map.enableScrollWheelZoom();
 var colnum = 10; // 分割屏幕为10列6行
 var rownum = 6;
-// 每当拖拽地图，缩放地图或地图加载完毕后，调用渲染函数
-map.addEventListener("moveend", getB);
-map.addEventListener("zoomend", getB);
-map.addEventListener("tilesloaded", getB)
-function getB(){
-	map.clearOverlays(); // 清空历史覆盖物
+var newpos = [];
+pointConvertor(data);
+setTimeout(main, 60000);
+function main(){
+	getB();
+	// 每当拖拽地图，缩放地图或地图加载完毕后，调用渲染函数
+	map.addEventListener("moveend", getB);
+	map.addEventListener("zoomend", getB);
+	map.addEventListener("tilesloaded", getB)
+	function getB(){
+		map.clearOverlays(); // 清空历史覆盖物
 
-	var cubes = initCube(); // 根据分割初始化每一个单元格
-	var boundsLngMax = map.getBounds().getNorthEast().lng; // 得到屏幕范围内当前比例下的顶点坐标
-	var boundsLngMin = map.getBounds().getSouthWest().lng;
-	var boundsLatMax = map.getBounds().getNorthEast().lat;
-	var boundsLatMin = map.getBounds().getSouthWest().lat;
-	var boundries = [boundsLngMax, boundsLngMin, boundsLatMax, boundsLatMin];
-	var myIcon = new BMap.Icon('truck.png', new BMap.Size(45, 40), {});  // 卡车图标实例
-	for (var i=0; i<data.length; i++){ // 对每一个记录做渲染
-		if (data[i]["经度"]>=boundsLngMin && data[i]["经度"]<=boundsLngMax && 
-			data[i]["纬度"]>=boundsLatMin && data[i]["纬度"]<=boundsLatMax){ // 该记录在屏幕范围坐标内则渲染
+		var cubes = initCube(); // 根据分割初始化每一个单元格
+		var boundsLngMax = map.getBounds().getNorthEast().lng; // 得到屏幕范围内当前比例下的顶点坐标
+		var boundsLngMin = map.getBounds().getSouthWest().lng;
+		var boundsLatMax = map.getBounds().getNorthEast().lat;
+		var boundsLatMin = map.getBounds().getSouthWest().lat;
+		var boundries = [boundsLngMax, boundsLngMin, boundsLatMax, boundsLatMin];
+		var myIcon = new BMap.Icon('truck.png', new BMap.Size(45, 40), {});  // 卡车图标实例
+		for (var i=0; i<newpos.length; i++){ // 对每一个记录做渲染
+			if (newpos[i]["经度"]>=boundsLngMin && newpos[i]["经度"]<=boundsLngMax && 
+				newpos[i]["纬度"]>=boundsLatMin && newpos[i]["纬度"]<=boundsLatMax){ // 该记录在屏幕范围坐标内则渲染
 
-			var coord = getCoordInCube(data[i]["经度"], data[i]["纬度"], boundries); // 得到该记录所在的单元格
-			var point = new BMap.Point(data[i]["经度"], data[i]["纬度"]);      
-			var marker = new BMap.Marker(point, {icon: myIcon});   
-			marker.setTitle("司机姓名："+data[i]["司机姓名"]+" 车牌："+data[i]["车牌号"]+" 记录时间："+data[i]["记录时间"]); 
-			//map.addOverlay(marker);
-			marker.addEventListener("click",function(){
-				var label = new BMap.Label(this.V.title.replace(/\s/g, "<br />"));
-				label.setContent = "text";
-				label.setStyle({backgroundColor: "#CAE1FF"});
-				label.setPosition(this.point);
-				label.setOffset(new BMap.Size(30,-40));
-				label.enableMassClear();
-				map.addOverlay(label);
-			});
-			marker.addEventListener("mouseout",function(){
-				for (var j=0; j<map.getOverlays().length; j++){
-					if (map.getOverlays()[j].V.className == "BMapLabel" && map.getOverlays()[j].content.length > 10) {
-						map.removeOverlay(map.getOverlays()[j]);	
+				var coord = getCoordInCube(newpos[i]["经度"], newpos[i]["纬度"], boundries); // 得到该记录所在的单元格
+				var point = new BMap.Point(newpos[i]["经度"], newpos[i]["纬度"]);      
+				var marker = new BMap.Marker(point, {icon: myIcon});   
+				marker.setTitle("司机姓名："+data[i]["司机姓名"]+" 车牌："+data[i]["车牌号"]+" 记录时间："+data[i]["记录时间"]); 
+				//map.addOverlay(marker);
+				marker.addEventListener("click",function(){
+					var label = new BMap.Label(this.V.title.replace(/\s/g, "<br />"));
+					label.setContent = "text";
+					label.setStyle({backgroundColor: "#CAE1FF"});
+					label.setPosition(this.point);
+					label.setOffset(new BMap.Size(30,-40));
+					label.enableMassClear();
+					map.addOverlay(label);
+				});
+				marker.addEventListener("mouseout",function(){
+					for (var j=0; j<map.getOverlays().length; j++){
+						if (map.getOverlays()[j].V.className == "BMapLabel" && map.getOverlays()[j].content.length > 10) {
+							map.removeOverlay(map.getOverlays()[j]);	
+						}
 					}
-				}
-			});
-			cubes[coord].push(marker); // 将该记录的覆盖物实例放入所在的单元格中
-		}
-	}
-	var threshold = 4; // 设定阈值
-	for (var coord in cubes) { // 每个单元格少于4辆卡车时则直接加载卡车覆盖物
-		if (cubes[coord].length < threshold) {
-			for (var i=0; i<cubes[coord].length; i++) {
-				map.addOverlay(cubes[coord][i]);
+				});
+				cubes[coord].push(marker); // 将该记录的覆盖物实例放入所在的单元格中
 			}
 		}
-		else { // 每个单元格大于等于4辆卡车时则用圆圈加数字代替
-			var point0 = new BMap.Point(0, 0);
-			var point1 = new BMap.Point((boundries[0] - boundries[1])/colnum, (boundries[2] - boundries[3])/rownum);
-			var distance = map.getDistance(point0, point1); // 计算每个单元格的对角线实际距离（米）
-			var point = cubes[coord][0].getPosition(); // 暂用该单元格中第一个实例的位置为圆心
-			var circle = new BMap.Circle(point,distance/10,{strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});
-			var label = new BMap.Label(cubes[coord].length.toString()); // 数字表示车辆数
-			label.setPosition(point);
-			map.addOverlay(circle);
-			map.addOverlay(label);
+		var threshold = 4; // 设定阈值
+		for (var coord in cubes) { // 每个单元格少于4辆卡车时则直接加载卡车覆盖物
+			if (cubes[coord].length < threshold) {
+				for (var i=0; i<cubes[coord].length; i++) {
+					map.addOverlay(cubes[coord][i]);
+				}
+			}
+			else { // 每个单元格大于等于4辆卡车时则用圆圈加数字代替
+				var point0 = new BMap.Point(0, 0);
+				var point1 = new BMap.Point((boundries[0] - boundries[1])/colnum, (boundries[2] - boundries[3])/rownum);
+				var distance = map.getDistance(point0, point1); // 计算每个单元格的对角线实际距离（米）
+				var point = cubes[coord][0].getPosition(); // 暂用该单元格中第一个实例的位置为圆心
+				var circle = new BMap.Circle(point,distance/10,{strokeColor:"blue", strokeWeight:2, strokeOpacity:0.5});
+				var label = new BMap.Label(cubes[coord].length.toString()); // 数字表示车辆数
+				label.setPosition(point);
+				map.addOverlay(circle);
+				map.addOverlay(label);
+			}
 		}
 	}
 }
@@ -120,6 +125,26 @@ function initCube() {
 		}
 	}
 	return cubes;
+}
+
+function pointConvertor(data) {
+	var convertor = new BMap.Convertor();
+	for (var i=0; i<data.length; i++) {
+		var pointArr = [];
+		var ggPoint = new BMap.Point(data[i]["经度"],data[i]["纬度"]);
+		pointArr.push(ggPoint);
+		convertor.translate(pointArr, 1, 5, function(transdata) {
+			if(transdata.status === 0) {
+				console.log(transdata.status);
+				newpos.push({"经度": transdata.points[0].lng, "纬度": transdata.points[0].lat});
+			}
+			else {
+				alert("有数据无法完成坐标转换，请刷新重试！");
+				newpos = data;
+
+			}
+		});
+	}
 }
 
 

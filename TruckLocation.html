@@ -1,0 +1,41 @@
+<!DOCTYPE html>  
+<html>  
+<head>  
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />  
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  
+<title>Hello, World</title>  
+<style type="text/css">  
+html{height:100%}  
+body{height:100%;margin:0px;padding:0px}  
+#container{height:100%}  
+</style>  
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=oTCnYsxEFVjSzRm2fQF0X9Pd"></script>
+</head>  
+ 
+<body>  
+<div id="container"></div> 
+<script type="text/javascript" src="data.js"></script>
+<script type="text/javascript"> 
+// 默认定位杭州
+var map = new BMap.Map('container'); 
+map.centerAndZoom("杭州",12);
+// 根据IP地址定位当前城市
+var myCity = new BMap.LocalCity();
+myCity.get(myFun);
+function myFun(result){
+    var cityName = result.name;
+    map.centerAndZoom(cityName, 12); 
+    console.log(cityName);
+}
+
+map.enableScrollWheelZoom();
+
+var pt = new BMap.Point(120.2, 30.193);
+var myIcon = new BMap.Icon('truck.png', new BMap.Size(50, 40));
+var marker = new BMap.Marker(pt,{icon:myIcon}); 
+map.addOverlay(marker);
+marker.setAnimation(BMAP_ANIMATION_BOUNCE);
+
+</script>  
+</body>  
+</html>
