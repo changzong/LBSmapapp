@@ -22,7 +22,7 @@
 <body>  
 <div id="text" style="position:absolute;left:0;top:0;z-index:100;color:#999999;"></div>
 <div id="container"></div> 
-<script type="text/javascript" src="data.js"></script>
+<script type="text/javascript" src="hangzhou.js"></script>
 <script type="text/javascript"> 
 $("#text").html("正在准备坐标数据...");
 $("#text").append("<img src='loading.gif' height='20' width='20' style='position:relative;left:10px;top:5px'/>");
@@ -65,28 +65,28 @@ function main(){
 				var coord = getCoordInCube(newpos[i]["经度"], newpos[i]["纬度"], boundries); // 得到该记录所在的单元格
 				var point = new BMap.Point(newpos[i]["经度"], newpos[i]["纬度"]);      
 				var marker = new BMap.Marker(point, {icon: myIcon});   
-				marker.setTitle("司机姓名："+data[i]["司机姓名"]+" 车牌："+data[i]["车牌号"]+" 记录时间："+data[i]["记录时间"]); 
+				//marker.setTitle("司机姓名："+data[i]["司机姓名"]+" 车牌："+data[i]["车牌号"]+" 记录时间："+data[i]["记录时间"]); 
 				//map.addOverlay(marker);
-				marker.addEventListener("click",function(){
-					var label = new BMap.Label(this.V.title.replace(/\s/g, "<br />"));
-					label.setContent = "text";
-					label.setStyle({backgroundColor: "#CAE1FF"});
-					label.setPosition(this.point);
-					label.setOffset(new BMap.Size(30,-40));
-					label.enableMassClear();
-					map.addOverlay(label);
-				});
-				marker.addEventListener("mouseout",function(){
-					for (var j=0; j<map.getOverlays().length; j++){
-						if (map.getOverlays()[j].V.className == "BMapLabel" && map.getOverlays()[j].content.length > 10) {
-							map.removeOverlay(map.getOverlays()[j]);	
-						}
-					}
-				});
+				// marker.addEventListener("click",function(){
+				// 	var label = new BMap.Label(this.V.title.replace(/\s/g, "<br />"));
+				// 	label.setContent = "text";
+				// 	label.setStyle({backgroundColor: "#CAE1FF"});
+				// 	label.setPosition(this.point);
+				// 	label.setOffset(new BMap.Size(30,-40));
+				// 	label.enableMassClear();
+				// 	map.addOverlay(label);
+				// });
+				// marker.addEventListener("mouseout",function(){
+				// 	for (var j=0; j<map.getOverlays().length; j++){
+				// 		if (map.getOverlays()[j].V.className == "BMapLabel" && map.getOverlays()[j].content.length > 10) {
+				// 			map.removeOverlay(map.getOverlays()[j]);	
+				// 		}
+				// 	}
+				// });
 				cubes[coord].push(marker); // 将该记录的覆盖物实例放入所在的单元格中
 			}
 		}
-		var threshold = 4; // 设定阈值
+		var threshold = 40; // 设定阈值
 		for (var coord in cubes) { // 每个单元格少于4辆卡车时则直接加载卡车覆盖物
 			if (cubes[coord].length < threshold) {
 				for (var i=0; i<cubes[coord].length; i++) {
@@ -148,14 +148,15 @@ function pointConvertor(data) {
 					for (var j=0; j<transdata.points.length; j++) {
 						newpos.push({"经度": transdata.points[j].lng, "纬度": transdata.points[j].lat});
 					}
+					//console.log(transdata, newpos.length, data.length);
 					if (newpos.length == data.length) {
 						Executor(0);
 					 	return;
 					}
-					else if (newpos.length == data.length-10 || newpos.length == data.length-20) { // bug hiding here!
-						Executor(1);
-						return;
-					}
+					// else if (transdata.points.length < 10 && newpos.length < data.length) { // bug hiding here!
+					//  	Executor(1);
+					//  	return;
+					// }
 				}
 				else {
 					Executor(2);

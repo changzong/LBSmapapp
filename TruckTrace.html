@@ -1,0 +1,148 @@
+<!DOCTYPE html>  
+<html>  
+<head>  
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />  
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  
+<title>Hello, World</title>  
+	<style type="text/css">
+		html{height:100%}  
+		body{height:100%;margin:0px;padding:0px}  
+		#container{height:100%} 
+		#container{    
+		    -webkit-filter: blur(10px); /* Chrome, Opera */
+		       -moz-filter: blur(10px);
+		        -ms-filter: blur(10px);    
+		            filter: blur(10px);    
+		}
+	</style> 
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=oTCnYsxEFVjSzRm2fQF0X9Pd"></script>
+<script type="text/javascript" src="http://api.map.baidu.com/library/LuShu/1.2/src/LuShu_min.js"></script>
+<script type="text/javascript" src="jquery-2.2.0.min.js"></script>
+</head>  
+ 
+<body>  
+<div id="text" style="position:absolute;left:0;top:0;z-index:100;color:#999999;"></div>
+<div id="container"></div> 
+<script type="text/javascript" src="trace_data.js"></script>
+<script type="text/javascript"> 
+$("#text").html("正在准备坐标数据...");
+$("#text").append("<img src='loading.gif' height='20' width='20' style='position:relative;left:10px;top:5px'/>");
+// 默认定位杭州
+var map = new BMap.Map('container'); 
+map.centerAndZoom("杭州",12);
+// 根据IP地址定位当前城市
+var myCity = new BMap.LocalCity();
+var currentCity = "杭州";
+myCity.get(myFun);
+function myFun(result){
+    var currentCity = result.name;
+    map.centerAndZoom(currentCity, 12); 
+}
+
+map.enableScrollWheelZoom();
+
+var newpos_trace = [];
+pointConvertorTrace(data);
+
+function mainTrace() {
+	var pointArr = [];
+	var wayPoints = [];
+	var landmarkArr = [];
+	for (var i=0; i<newpos_trace.length; i++){
+		var p = new BMap.Point(newpos_trace[i]["经度"], newpos_trace[i]["纬度"]);
+		pointArr.push(p);
+		landmarkArr.push({lng:newpos_trace[i]["经度"], lat:newpos_trace[i]["纬度"], html:'', pauseTime:0});
+		if (i == 0 || i == newpos_trace.length-1) {
+			var marker = new BMap.Marker(p);
+			map.addOverlay(marker); 
+		}
+	}
+	var lushu;
+	var arrPois =[];
+	var drv = new BMap.DrivingRoute(currentCity, {
+        onSearchComplete: function(res) {
+        	console.log(drv.getStatus());
+            if (drv.getStatus() == BMAP_STATUS_SUCCESS) {
+                var plan = res.getPlan(0);
+                for(var j=0;j<plan.getNumRoutes();j++){
+                    var route = plan.getRoute(j);
+                    arrPois= arrPois.concat(route.getPath());
+                }
+                map.addOverlay(new BMap.Polyline(arrPois, {strokeColor: '#111'}));
+                map.setViewport(arrPois);
+                lushu = new BMapLib.LuShu(map,arrPois,{
+			        defaultContent:"",
+			        autoView:true,
+			        icon  : new BMap.Icon('truck2.png', new BMap.Size(70, 40)),
+			        enableRotation:true,
+			        landmarkPois: landmarkArr
+				});
+            }
+        }
+    });
+    var base = Math.floor(pointArr.length/20);
+    for (var i=1; i<pointArr.length-1; i++) {
+
+    	if (i % base == 0) wayPoints.push(pointArr[i]);
+    }
+	drv.search(pointArr[0], pointArr[pointArr.length-1], {waypoints: wayPoints});
+
+	var move=setTimeout(function(){lushu.start();},2000)
+}
+
+
+
+function pointConvertorTrace(data) {
+	var convertor = new BMap.Convertor();
+	var pointArr = [];
+	for (var i=0; i<data.length; i++) {
+		var ggPoint = new BMap.Point(data[i]["经度"],data[i]["纬度"]);
+		pointArr.push(ggPoint);
+		if (pointArr.length == 10 || i == data.length-1) {
+			convertor.translate(pointArr, 1, 5, function(transdata) {
+				if (transdata.status === 0) {
+					for (var j=0; j<transdata.points.length; j++) {
+						newpos_trace.push({"经度": transdata.points[j].lng, "纬度": transdata.points[j].lat});
+					}
+					if (newpos_trace.length == data.length) {
+						executorTrace(0);
+					 	return;
+					}
+					// else if (newpos_trace.length == data.length-10 || newpos_trace.length == data.length-20) { // bug hiding here!
+					// 	executorTrace(1);
+					// 	return;
+					// }
+				}
+				else {
+					executorTrace(2);
+					return;
+				}
+			});
+			var pointArr = [];
+		}
+	}
+}
+
+function executorTrace(status){
+	switch(status) {
+		case 0:
+		 	break;
+	 	case 1:
+			alert("部分坐标未能转换成功，正在使用原始坐标！");
+			newpos_trace = data;
+			break;
+		case 2:
+			alert("由于服务器原因坐标转换失败，正在使用原始坐标！");
+			newpos_trace = data;
+			break;
+		default:
+			break;
+	}
+	$("#container").css({"-webkit-filter": "blur(0px)"});
+	$("#text").css({"display": "none"});
+	mainTrace();
+}
+
+</script>  
+</body>  
+</html>
