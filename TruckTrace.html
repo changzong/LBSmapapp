@@ -3,7 +3,7 @@
 <head>  
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />  
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  
-<title>Hello, World</title>  
+<title>订单轨迹</title>  
 	<style type="text/css">
 		html{height:100%}  
 		body{height:100%;margin:0px;padding:0px}  
@@ -101,17 +101,19 @@ function pointConvertorTrace(data) {
 		if (pointArr.length == 10 || i == data.length-1) {
 			convertor.translate(pointArr, 1, 5, function(transdata) {
 				if (transdata.status === 0) {
-					for (var j=0; j<transdata.points.length; j++) {
-						newpos_trace.push({"经度": transdata.points[j].lng, "纬度": transdata.points[j].lat});
+					if (transdata.points.length < 10 && (data.length-newpos.length)>10) { // CZALERT: annoying here to prevent escaping earlier
+						Executor(1);
+						return;
 					}
-					if (newpos_trace.length == data.length) {
-						executorTrace(0);
-					 	return;
+					else {
+						for (var j=0; j<transdata.points.length; j++) {
+							newpos.push({"经度": transdata.points[j].lng, "纬度": transdata.points[j].lat});
+						}
+						if (newpos.length == data.length) {
+							Executor(0);
+						 	return;
+						}
 					}
-					// else if (newpos_trace.length == data.length-10 || newpos_trace.length == data.length-20) { // bug hiding here!
-					// 	executorTrace(1);
-					// 	return;
-					// }
 				}
 				else {
 					executorTrace(2);

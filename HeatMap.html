@@ -1,10 +1,11 @@
-<!DOCTYPE html>  
-<html>  
-<head>  
-	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />  
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  
-	<title>杭州车场</title>   
-	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=oTCnYsxEFVjSzRm2fQF0X9Pd"></script>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=oTCnYsxEFVjSzRm2fQF0X9Pd"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/library/Heatmap/2.0/src/Heatmap_min.js"></script>
+    <title>热力图功能示例</title>
 	<script type="text/javascript" src="jquery-2.2.0.min.js"></script>
 	<style type="text/css">
 		html{height:100%}  
@@ -17,9 +18,8 @@
 		            filter: blur(10px);    
 		}
 	</style>
-</head>  
- 
-<body>  
+</head>
+<body>
 <div id="text" style="position:absolute;left:0;top:0;z-index:100;color:#999999;"></div>
 <div id="container"></div> 
 <script type="text/javascript" src="hangzhou.js"></script>
@@ -86,45 +86,26 @@ function main(){
 				cubes[coord].push(marker); // 将该记录的覆盖物实例放入所在的单元格中
 			}
 		}
-		var threshold = 40; // 设定阈值
-		for (var coord in cubes) { // 每个单元格少于4辆卡车时则直接加载卡车覆盖物
-			if (cubes[coord].length < threshold) {
-				for (var i=0; i<cubes[coord].length; i++) {
-					map.addOverlay(cubes[coord][i]);
-				}
-			}
-			else { // 每个单元格大于等于4辆卡车时则用圆圈加数字代替
-				var point0 = new BMap.Point(0, 0);
-				var point1 = new BMap.Point((boundries[0] - boundries[1])/colnum, (boundries[2] - boundries[3])/rownum);
-				var distance = map.getDistance(point0, point1); // 计算每个单元格的对角线实际距离（米）
-				var point = cubes[coord][0].getPosition(); // 暂用该单元格中第一个实例的位置为圆心
-				var circle = new BMap.Circle(point,distance/10,{
-					strokeColor:"blue", 
-					strokeWeight:1, 
-					strokeOpacity:0.5, 
-					fillColor: setColor(cubes[coord].length)
-				});
-				var opts = {position: point, offset: new BMap.Size(-5, -7)}
-				var label = new BMap.Label(cubes[coord].length.toString(), opts); // 数字表示车辆数
-				label.setStyle({
-					fontSize:"12px", 
-					backgroundColor:"none", 
-					fontWeight:"bold", 
-					borderWidth:"0px",
-					textAlign: "center"
-				});
-				circle.addEventListener("click", function(){
-					map.setCenter(this.point);
-					map.zoomIn();
-				});
-				label.addEventListener("click", function(){
-					map.setCenter(this.point);
-					map.zoomIn();
-				});
-				map.addOverlay(circle);
-				map.addOverlay(label);
-			}
+		console.log(cubes)
+		var points = [];
+		for (var coord in cubes) { 
+			if (cubes[coord].length == 0) continue;
+			var point = cubes[coord][0].getPosition();
+			points.push({"lng":point.lng,"lat":point.lat,"count":cubes[coord].length});
 		}
+		console.log(points);
+		if(!isSupportCanvas()){
+	    	alert('热力图目前只支持有canvas支持的浏览器,您所使用的浏览器不能使用热力图功能~')
+	    }
+		heatmapOverlay = new BMapLib.HeatmapOverlay({"radius":80});
+		map.addOverlay(heatmapOverlay);
+		heatmapOverlay.setDataSet({data:points,max:200});
+	    heatmapOverlay.show();
+		//判断浏览区是否支持canvas
+	    function isSupportCanvas(){
+	        var elem = document.createElement('canvas');
+	        return !!(elem.getContext && elem.getContext('2d'));
+	    }
 	}
 }
 
@@ -215,7 +196,6 @@ function setColor(num) {
 	else if (num >= 50 && num < 100) return "#DAA520";
 	else return "#CD3700";
 }
-
-</script>  
-</body>  
+</script> 
+</body>
 </html>
