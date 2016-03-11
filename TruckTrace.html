@@ -140,7 +140,7 @@ function executorTrace(status){
 		default:
 			break;
 	}
-	$("#container").css({"-webkit-filter": "blur(0px)"});
+	$("#container").css({"-webkit-filter": "blur(0px)", "-moz-filter": "blur(0px)", "-ms-filter": "blur(0px)", "filter": "blur(0px)"});
 	$("#text").css({"display": "none"});
 	mainTrace();
 }

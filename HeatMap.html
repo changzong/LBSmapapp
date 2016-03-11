@@ -6,7 +6,7 @@
     <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=oTCnYsxEFVjSzRm2fQF0X9Pd"></script>
     <script type="text/javascript" src="http://api.map.baidu.com/library/Heatmap/2.0/src/Heatmap_min.js"></script>
     <title>热力图功能示例</title>
-	<script type="text/javascript" src="jquery-2.2.0.min.js"></script>
+	<script type="text/javascript" src="/lib/jquery-2.2.0.min.js"></script>
 	<style type="text/css">
 		html{height:100%}  
 		body{height:100%;margin:0px;padding:0px}  
@@ -22,10 +22,10 @@
 <body>
 <div id="text" style="position:absolute;left:0;top:0;z-index:100;color:#999999;"></div>
 <div id="container"></div> 
-<script type="text/javascript" src="hangzhou.js"></script>
+<script type="text/javascript" src="/src/hangzhou.js"></script>
 <script type="text/javascript"> 
 $("#text").html("正在准备坐标数据...");
-$("#text").append("<img src='loading.gif' height='20' width='20' style='position:relative;left:10px;top:5px'/>");
+$("#text").append("<img src='/res/loading.gif' height='20' width='20' style='position:relative;left:10px;top:5px'/>");
 // 默认定位杭州
 var map = new BMap.Map('container'); 
 map.centerAndZoom("杭州",12);
@@ -57,7 +57,7 @@ function main(){
 		var boundsLatMax = map.getBounds().getNorthEast().lat;
 		var boundsLatMin = map.getBounds().getSouthWest().lat;
 		var boundries = [boundsLngMax, boundsLngMin, boundsLatMax, boundsLatMin];
-		var myIcon = new BMap.Icon('truck.png', new BMap.Size(45, 40), {});  // 卡车图标实例
+		var myIcon = new BMap.Icon('/res/truck.png', new BMap.Size(45, 40), {});  // 卡车图标实例
 		for (var i=0; i<newpos.length; i++){ // 对每一个记录做渲染
 			if (newpos[i]["经度"]>=boundsLngMin && newpos[i]["经度"]<=boundsLngMax && 
 				newpos[i]["纬度"]>=boundsLatMin && newpos[i]["纬度"]<=boundsLatMax){ // 该记录在屏幕范围坐标内则渲染
@@ -185,7 +185,7 @@ function Executor(status){
 		default:
 			break;
 	}
-	$("#container").css({"-webkit-filter": "blur(0px)"});
+	$("#container").css({"-webkit-filter": "blur(0px)", "-moz-filter": "blur(0px)", "-ms-filter": "blur(0px)", "filter": "blur(0px)"});
 	$("#text").css({"display": "none"});
 	main();
 }
