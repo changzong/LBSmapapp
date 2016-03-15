@@ -24,7 +24,9 @@
 			right: -15%;
 			top: 0px;
 			width: 15%;
+			max-height: 100%;
 			opacity: 0.9;
+			overflow-y: scroll;
 			z-index: 100;
 		}
 	</style>
@@ -41,14 +43,16 @@
 <script type="text/javascript"> 
 $("#text").html("正在准备坐标数据...");
 $("#text").append("<img src='/res/loading.gif' height='20' width='20' style='position:relative;left:10px;top:5px'/>");
- $(document.body).css({
-   "overflow-x":"hidden",
-   "overflow-y":"hidden"
- });
+ // $(document.body).css({
+ //   "overflow-x":"hidden",
+ //   "overflow-y":"hidden"
+ // });
 // 默认定位杭州
 var map = new BMap.Map('container'); 
 var initzoom = 12;
+var maxzoom = 18;
 map.centerAndZoom("杭州",initzoom);
+map.setMaxZoom(maxzoom);
 // 根据IP地址定位当前城市
 var myCity = new BMap.LocalCity();
 myCity.get(myFun);
@@ -133,19 +137,33 @@ function getB(){
 				textAlign: "center"
 			});
 			circle.coord = coord;
+			label.coord = coord;
 			if (cubes[coord].length > threshold) {
-				circle.addEventListener("click", function(){
-					map.setCenter(this.point);
-					map.zoomIn();
-				});
-				label.addEventListener("click", function(){
-					map.setCenter(this.point);
-					map.zoomIn();
-				});
+				if (map.getZoom() < maxzoom) {
+					circle.addEventListener("click", function(){
+						map.setCenter(this.point);
+						map.zoomIn();
+					});
+					label.addEventListener("click", function(){
+						map.setCenter(this.point);
+						map.zoomIn();
+					});
+				}
+				else {
+					circle.addEventListener("click", function(){
+						truckListPop(cubes[this.coord], cubes);
+					});
+					label.addEventListener("click", function(){
+						truckListPop(cubes[this.coord], cubes);
+					});
+				}
 			}
 			else {
 				circle.addEventListener("click", function(){
-					truckListPop(threshold, cubes, this);
+					truckListPop(cubes[this.coord], cubes);
+				});
+				label.addEventListener("click", function(){
+					truckListPop(cubes[this.coord], cubes);
 				});
 			}
 			map.addOverlay(circle);
@@ -154,11 +172,11 @@ function getB(){
 	}
 }
 
-function truckListPop(threshold, cubes, that){
+function truckListPop(that, cubes){
 	$("#list").find("a").remove()
 	$("#list").css({display: "none", right: "-15%", display: "inline"}).animate({right: "0px"}, 300);
-	for (var i=0; i<threshold; i++) {
-		var content = cubes[that.coord][i].getTitle();
+	for (var i=0; i<that.length; i++) {
+		var content = that[i].getTitle();
 		var title = content.split(" ")[1].replace("车牌：", "");
 		var text = content.replace(/\s/g, "<br/>")
 		$("#list").children("div").append(
